@@ -1,43 +1,16 @@
-#include <thread>
-#include <shared_mutex>
-#include <iostream>
-#include <chrono>
+#include <server.h>
 
-std::shared_mutex mtx;
-int count = 0;
-
-void ReadCount()
-{
-    std::shared_lock lock(mtx);
-    std::cout << count << std::endl;
-}
-
-void IncrementCount(int &cnt)
-{
-    std::lock_guard lock(mtx);
-    cnt += 1;
-}
-
-void WriteCount(int &cnt)
-{
-    for (size_t i = 0; i < 1000; i++)
-    {
-        IncrementCount(cnt);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-}
+#define PORT 55665
 
 int main()
 {
+    Server serv(PORT);
+    bool res = false;
 
-    std::thread thr(WriteCount, std::ref(count));
-
-    for (size_t i = 0; i < 1000; i++)
+    if (serv.Init())
     {
-        ReadCount();
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        res = serv.Start();
     }
 
-    thr.join();
-    return 0;
+    return !res;
 }
